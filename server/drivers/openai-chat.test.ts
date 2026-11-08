@@ -39,7 +39,7 @@ async function runTurn(body: string | (() => Response), driver: "openai-compat" 
   await instance.adapter.sendTurn({ threadId: "thread", text: "hi" });
   await vi.waitFor(() => {
     if (!events.some((event) => event.type === "turn.completed")) throw new Error("turn still running");
-  });
+  }, { timeout: 15_000, interval: 20 });
   await instance.dispose();
   return events;
 }
@@ -774,6 +774,17 @@ describe("createOpenAIChatRuntime stream termination", () => {
       message: "Stream ended before completion",
     });
     expect(events.at(-1)).toMatchObject({ type: "turn.completed", ok: false, stopReason: "error" });
+  });
+
+  it("retries a stream that truncates before any output, and finishes on the resend", async () => {
+    const truncated = () => sse('data: {"choices":[{"index":0,"delta":{"content":""}}]}\n\n');
+    const ok = () => sse('data: {"choices":[{"index":0,"finish_reason":"stop","delta":{"content":"done"}}]}\n\ndata: [DONE]\n\n');
+    let requests = 0;
+    const events = await runTurn(() => ++requests === 1 ? truncated() : ok());
+    expect(requests).toBe(2);
+    expect(events.find((event) => event.type === "turn.retrying")).toMatchObject({ attempt: 1, reason: "stream_truncated" });
+    expect(events.some((event) => event.type === "runtime.error")).toBe(false);
+    expect(events.at(-1)).toMatchObject({ type: "turn.completed", ok: true });
   });
 
   it("lets the MiniMax driver finish a [DONE]-less reasoning_split stream and stream its reasoning", async () => {

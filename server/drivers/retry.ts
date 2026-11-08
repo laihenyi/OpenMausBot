@@ -13,7 +13,8 @@ export type TransientReason =
   | "overloaded"
   | "server_error"
   | "connection_reset"
-  | "timeout";
+  | "timeout"
+  | "stream_truncated";
 
 export type TerminalReason =
   | "auth"
@@ -43,6 +44,9 @@ const TRANSIENT_PATTERNS: Array<{ pattern: RegExp; reason: TransientReason }> = 
     reason: "connection_reset",
   },
   { pattern: /\btimeout(ed)?\b|\btimed? out\b/i, reason: "timeout" },
+  // The provider closed the stream before any finish_reason — a mid-stream drop (slow first token on
+  // reasoning models, long-lived connections), not a request-shape problem.
+  { pattern: /\bstream (?:ended before|was cut|truncated)\b/i, reason: "stream_truncated" },
 ];
 
 /** A subscription's usage running out: terminal even when phrased as a rate limit. Claude Code 2.1.295
