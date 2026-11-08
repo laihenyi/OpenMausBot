@@ -434,6 +434,9 @@ export function nativeSkillFolders(
     }
   }
   if (engine.driverKind === "codex") return codexSkillRoots(home, env.CODEX_HOME);
+  // The DeepSeek Harness loads the person's shared skill folder itself. Listing it keeps the `/` menu and the
+  // engine's own catalog on the same set, instead of the menu offering only the skills imported into this bot.
+  if (engine.driverKind === "deepseekAgent") return [join(home, ".agents", "skills")];
   return [];
 }
 
