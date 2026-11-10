@@ -33,6 +33,19 @@ function fixBranches() {
   return names.filter((name) => name !== "main" && git(["rev-list", "--count", `upstream/main..${name}`]) !== "0");
 }
 
+/**
+ * Which running processes the commits between two revisions made stale. A dev session loads code once at
+ * start: the server and the desktop shell hold the old copy until restarted, while Vite reloads the UI itself.
+ */
+function staleRuntimes(before, after) {
+  const touched = git(["diff", "--name-only", before, after]).split("\n").filter(Boolean);
+  const deps = touched.some((path) => path === "package.json" || path === "pnpm-lock.yaml");
+  return {
+    server: deps || touched.some((path) => /^(server|companion)\//.test(path)),
+    electron: deps || touched.some((path) => path.startsWith("electron/")),
+  };
+}
+
 function main() {
   if (dirty()) {
     say("Working tree has changes. Commit or stash them first; this script never stashes for you.");
@@ -49,6 +62,14 @@ function main() {
   git(["merge", "--ff-only", "upstream/main"]);
   const after = git(["rev-parse", "--short", "HEAD"]);
   say(before === after ? `  main already at ${after}` : `  main ${before} → ${after}`);
+
+  // A dev session loads code at start, so the restart that follows is decided by what moved, not by habit.
+  if (before !== after) {
+    const stale = staleRuntimes(before, after);
+    const names = [stale.server && "the server", stale.electron && "the desktop shell"].filter(Boolean);
+    if (names.length === 0) say("  no runtime file changed — a running dev session is still current (Vite reloads the UI)");
+    else say(`  restart ${names.join(" and ")} when convenient: it holds the code from before this pull`);
+  }
 
   say("Pushing main to origin …");
   git(["push", "origin", "main"]);
