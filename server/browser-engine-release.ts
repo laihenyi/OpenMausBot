@@ -1,6 +1,9 @@
-// Digests computed from the official GitHub assets on 2026-09-08, except the versioned Windows vendor build; update pins
-// only through a reviewed native end-to-end run. The Dockerfile keeps the official Linux version.
-export const AGENT_BROWSER_VERSION = "0.37.0";
+// Digests read from the official GitHub release on 2026-11-10, except the versioned Windows vendor build. 0.37.0's
+// daemon never became ready on this fork's macOS machine, which stalled every browser tool; the darwin-arm64 asset
+// was downloaded, hashed, and driven through a real page load before this pin moved. The other targets' digests and
+// sizes are the release's published asset metadata, not a native run on this machine. The Dockerfile keeps its own
+// official Linux version.
+export const AGENT_BROWSER_VERSION = "0.39.4";
 
 export interface AgentBrowserReleaseAsset {
   /** `<platform>-<arch>`; Linux adds `-musl` on Alpine-style systems. */
@@ -17,33 +20,34 @@ export interface AgentBrowserReleaseAsset {
 const RELEASES = new Map<string, AgentBrowserReleaseAsset>([
   [
     "darwin-arm64",
-    { target: "darwin-arm64", asset: "agent-browser-darwin-arm64", sha256: "da5a2b4ef7be8ba279b1258c542c33877f480b1951d0d94de607fc1528edd380", bytes: 12429360 },
+    { target: "darwin-arm64", asset: "agent-browser-darwin-arm64", sha256: "0317ce35172905c775c25b393914bc259701a464877aab9753ec8896f6e38bf7", bytes: 15886176 },
   ],
   [
     "darwin-x64",
-    { target: "darwin-x64", asset: "agent-browser-darwin-x64", sha256: "f402c96350ffd2adc68d0e5e4d83aa49cf7735fef29882a8866be36cc2fc67e9", bytes: 13588296 },
+    { target: "darwin-x64", asset: "agent-browser-darwin-x64", sha256: "21522a8ec34063fa294b0c928ad03d3485f1821ebe22f9da2b47b89963f731af", bytes: 17544264 },
   ],
   [
     "linux-arm64",
-    { target: "linux-arm64", asset: "agent-browser-linux-arm64", sha256: "0315a8c4f7bf167cc5fd5eeaea79009b0e6b5d2ae8b3057bf6f96be978483426", bytes: 12507840 },
+    { target: "linux-arm64", asset: "agent-browser-linux-arm64", sha256: "922b60dbd9f5c8b5c0f39b453bfe8cbf61b83abd487344028a508e8c4dca7883", bytes: 15930832 },
   ],
   [
     "linux-musl-arm64",
-    { target: "linux-musl-arm64", asset: "agent-browser-linux-musl-arm64", sha256: "db67c0e84e0668c052c2cbdca325c57f896e309c3723755dcdd65b700f8a2b52", bytes: 12369352 },
+    { target: "linux-musl-arm64", asset: "agent-browser-linux-musl-arm64", sha256: "a532c13bdf40c6b8755cc52c711f63fd022c9e7403fce7a16b8fe8487c88c595", bytes: 15746488 },
   ],
   [
     "linux-musl-x64",
-    { target: "linux-musl-x64", asset: "agent-browser-linux-musl-x64", sha256: "5cff3bc7b2486867aba2901f92c9ce6029bd2a37951630d9feec1c5b3fee402e", bytes: 14092888 },
+    { target: "linux-musl-x64", asset: "agent-browser-linux-musl-x64", sha256: "34a8be7c062a99164fc02322f22ac5f42870206cc7b59bb40ef045958ad3705b", bytes: 18215072 },
   ],
   [
     "linux-x64",
-    { target: "linux-x64", asset: "agent-browser-linux-x64", sha256: "78e0c5a14a7fa1f3d1ae2acdbdcc94a047b435b998a8c505fcc49d7fa4935a49", bytes: 14253776 },
+    { target: "linux-x64", asset: "agent-browser-linux-x64", sha256: "aa82c8ee81a38b8ad9ba61af02ced6dcbbb8af36dd8b2b479384177f8aa077a6", bytes: 18407640 },
   ],
   [
     "win32-x64",
     {
-      // Upstream 0.37.0 still lacks vercel-labs/agent-browser#1781's Windows cold-start fix.
-      // Retain the native-verified revision until its replacement is tested.
+      // Upstream 0.39.4 still lacks vercel-labs/agent-browser#1781's Windows cold-start fix, which closed after this
+      // pin's 2026-10-26 release, and nothing on this machine can run a Windows build natively. Retain the
+      // native-verified revision until its replacement is tested.
       target: "win32-x64", version: "0.36.0-omb.1",
       asset: "agent-browser-win32-x64-0.36.0-omb.1.exe",
       url: "https://github.com/milind-soni/OpenMausBot/releases/download/browser-engine-v0.36.0-omb.1/agent-browser-win32-x64-0.36.0-omb.1.exe",
