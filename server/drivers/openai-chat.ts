@@ -714,12 +714,9 @@ export function createOpenAIChatRuntime<Config>(options: RuntimeOptions<Config>)
                 tools.definitions.length = 0;
                 continue;
               }
-              // Once a call has been handled, never replay it through a turn retry. A truncated stream is the
-              // one protocol error worth retrying — even where retries are otherwise off — and only while
-              // nothing streamed or executed yet, so the resend repeats no text and runs no tool.
-              const truncated = error instanceof ChatProtocolError && error.message === "Stream ended before completion";
-              if ((options.retryScale === undefined && !truncated) || abort.signal.aborted || streamed || seenCalls.size ||
-                  (error instanceof ChatProtocolError && !truncated) || !verdict.transient || attempt >= RETRY_MAX_ATTEMPTS - 1) throw error;
+              // Once handled, never replay through a turn retry — except a stream cut before any output, retries off or not.
+              if (((options.retryScale === undefined || error instanceof ChatProtocolError) && verdict.reason !== "stream_truncated") ||
+                  abort.signal.aborted || streamed || seenCalls.size || !verdict.transient || attempt >= RETRY_MAX_ATTEMPTS - 1) throw error;
               const delayMs = computeBackoff(attempt++);
               emit({ ...base(turn.threadId, turnId), type: "turn.retrying", attempt, delayMs, reason: verdict.reason });
               await interruptibleDelay(delayMs * (options.retryScale ?? 1), abort.signal).promise;

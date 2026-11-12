@@ -45,8 +45,9 @@ const TRANSIENT_PATTERNS: Array<{ pattern: RegExp; reason: TransientReason }> = 
   },
   { pattern: /\btimeout(ed)?\b|\btimed? out\b/i, reason: "timeout" },
   // The provider closed the stream before any finish_reason — a mid-stream drop (slow first token on
-  // reasoning models, long-lived connections), not a request-shape problem.
-  { pattern: /\bstream (?:ended before|was cut|truncated)\b/i, reason: "stream_truncated" },
+  // reasoning models, long-lived connections), not a request-shape problem. Anchored to the one message
+  // openai-chat raises, so a provider's error body quoting the phrase cannot make a refusal look retryable.
+  { pattern: /^stream ended before completion\b/i, reason: "stream_truncated" },
 ];
 
 /** A subscription's usage running out: terminal even when phrased as a rate limit. Claude Code 2.1.295
